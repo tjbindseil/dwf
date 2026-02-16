@@ -1,0 +1,115 @@
+:root {
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  color: #081018;
+  background: radial-gradient(circle at 20% 20%, #edf6ff, #f4f7fb 55%, #e8edf4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  padding: 1rem;
+  border-right: 1px solid #d9e2ef;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(4px);
+}
+
+.sidebar h1 {
+  margin: 0;
+}
+
+.muted {
+  margin-top: 0.25rem;
+  color: #5f6d7f;
+}
+
+label,
+button,
+input {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+input,
+button {
+  border: 1px solid #c0cbda;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: #f6faff;
+}
+
+button:hover {
+  background: #e9f2ff;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.toolbar {
+  margin-top: 1rem;
+}
+
+.tool-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+button.active {
+  border-color: #1c7ed6;
+  background: #dceeff;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.swatches button {
+  min-height: 28px;
+}
+
+.status {
+  font-size: 0.9rem;
+  color: #4a5a6f;
+  margin: 0.35rem 0;
+}
+
+.canvas-wrap {
+  overflow: auto;
+  padding: 1rem;
+}
+
+canvas {
+  border: 1px solid #cad5e7;
+  box-shadow: 0 10px 30px rgba(22, 35, 54, 0.12);
+  background: #fff;
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+}
