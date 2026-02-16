@@ -54,12 +54,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   joinRoom: async () => {
-    const { roomId, nickname, clientId, ws } = get();
+    const { roomId, nickname, clientId, ws: currentWs } = get();
     if (!roomId || !nickname) {
       throw new Error("Room ID and nickname are required");
     }
 
-    ws?.close();
+    currentWs?.close();
     set({ connectionState: "connecting" });
     const bootstrapRes = await fetch(`${API_URL}/rooms/${roomId}/bootstrap`);
 

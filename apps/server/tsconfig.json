@@ -1,4 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src", "test"]
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@dwf/protocol": ["../../packages/protocol/src/index.ts"]
+    }
+  },
+  "include": ["src"],
+  "references": [
+    {
+      "path": "../../packages/protocol"
+    }
+  ]
 }
