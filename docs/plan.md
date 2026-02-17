@@ -1,17 +1,23 @@
-thoughts on where to go next:
+# curr:
 
-- linting - it seems like when I save these files, my auto format kicks in,
-  can I get that to happen once right off the bat so that I can avoid format conflicts when modifying files?
+- beefing up testing
 
-- testing - i doubt we have 100% coverage
+# next:
+
+- CI
+  - include formatting (and linting?)
+
+# thoughts on where to go next:
+
+## Tech Infra
+
+- zod
+- auth
+- more robust picture (and op history?) storage
+
+## Features
 
 - frontend UI - its kinda confusing
   - possible features
     - list rooms
-
-leaning towards.. .linting so I can actually comment code
-
-what to investigate:
-
-- how does erase work?
-- how does undo / redo work?
+- it seems like only a single redo is stored, ie two undos, can only redo the latest
