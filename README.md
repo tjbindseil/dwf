@@ -36,6 +36,15 @@ Server data directory defaults to `<repo>/data`. Override with `DWF_DATA_DIR`.
 - Server: `npm run test -w @dwf/server`
 - Web: `npm run test -w @dwf/web`
 
+## Coverage
+
+- Full coverage gate (server + web): `npm run coverage:check`
+- Server coverage (unit + integration + merged): `npm run coverage -w @dwf/server`
+- Web coverage (unit): `npm run coverage -w @dwf/web`
+- Server merged HTML report: `apps/server/coverage/merged/index.html`
+- Web HTML report: `apps/web/coverage/unit/index.html`
+- Initial global thresholds (lines/functions/branches/statements): `60%`
+
 ## Formatting
 
 - Format all supported files: `npm run format`

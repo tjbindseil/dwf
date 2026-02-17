@@ -13,6 +13,10 @@
     "test:unit": "npm run test:unit --workspaces --if-present",
     "test:integration": "npm run test:integration --workspaces --if-present",
     "test:all": "npm run test:unit && npm run test:integration",
+    "coverage:server": "npm run coverage -w @dwf/server",
+    "coverage:web": "npm run coverage -w @dwf/web",
+    "coverage": "npm run coverage:server && npm run coverage:web",
+    "coverage:check": "npm run coverage",
     "lint": "npm run lint --workspaces --if-present",
     "format": "prettier . --write",
     "format:check": "prettier . --check"

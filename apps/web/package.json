@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "coverage:unit": "vitest run --coverage --coverage.reportsDirectory=coverage/unit",
+    "coverage": "npm run coverage:unit"
   },
   "dependencies": {
     "@dwf/protocol": "0.1.0",
@@ -20,6 +22,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",

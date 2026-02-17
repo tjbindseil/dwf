@@ -10,7 +10,12 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:unit": "vitest run --dir test/unit",
-    "test:integration": "vitest run --dir test/integration"
+    "test:integration": "vitest run --dir test/integration",
+    "coverage:clean": "node -e \"const fs=require('node:fs');fs.rmSync('coverage',{recursive:true,force:true});fs.rmSync('.vitest-reports',{recursive:true,force:true});\"",
+    "coverage:unit": "vitest run --dir test/unit --coverage --coverage.reportsDirectory=coverage/unit --reporter=blob --outputFile=.vitest-reports/unit.json",
+    "coverage:integration": "vitest run --dir test/integration --coverage --coverage.reportsDirectory=coverage/integration --reporter=blob --outputFile=.vitest-reports/integration.json",
+    "coverage:merge": "vitest --mergeReports .vitest-reports --coverage --coverage.reportsDirectory=coverage/merged",
+    "coverage": "npm run coverage:clean && npm run coverage:unit && npm run coverage:integration && npm run coverage:merge"
   },
   "dependencies": {
     "@dwf/protocol": "0.1.0",
@@ -23,6 +28,7 @@
     "ws": "^8.18.1"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
     "@types/node": "^22.13.4",
     "@types/ws": "^8.5.14",
     "tsx": "^4.20.3",
