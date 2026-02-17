@@ -21,11 +21,8 @@ import { RoomStore } from "./roomStore.js";
 export async function buildServer() {
   const app = Fastify({ logger: true });
   const store = new RoomStore();
-  const roomClients = new Map<string, Set<import("ws").WebSocket>>();
-  const clientRoom = new Map<
-    import("ws").WebSocket,
-    { roomId: string; clientId: string }
-  >();
+  const roomClients = new Map<string, Set<WebSocket>>();
+  const clientRoom = new Map<WebSocket, { roomId: string; clientId: string }>();
 
   await app.register(cors, { origin: true });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } });
