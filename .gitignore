@@ -8,4 +8,5 @@ coverage
 .vite
 *.tsbuildinfo
 data/rooms/*.json
+.vitest-reports/
 data/images/*.jpg

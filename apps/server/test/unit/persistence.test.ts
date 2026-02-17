@@ -19,9 +19,8 @@ describe("persistence", () => {
     tempDirs.push(dir);
     process.env.DWF_DATA_DIR = dir;
 
-    const { saveRoomState, loadRoomState } = await import(
-      "../../src/persistence.js"
-    );
+    const { saveRoomState, loadRoomState } =
+      await import("../../src/persistence.js");
 
     const state = {
       roomId: "room1",

@@ -12,9 +12,9 @@
     "test:unit": "vitest run --dir test/unit",
     "test:integration": "vitest run --dir test/integration",
     "coverage:clean": "node -e \"const fs=require('node:fs');fs.rmSync('coverage',{recursive:true,force:true});fs.rmSync('.vitest-reports',{recursive:true,force:true});\"",
-    "coverage:unit": "vitest run --dir test/unit --coverage --coverage.reportsDirectory=coverage/unit --reporter=blob --outputFile=.vitest-reports/unit.json",
-    "coverage:integration": "vitest run --dir test/integration --coverage --coverage.reportsDirectory=coverage/integration --reporter=blob --outputFile=.vitest-reports/integration.json",
-    "coverage:merge": "vitest --mergeReports .vitest-reports --coverage --coverage.reportsDirectory=coverage/merged",
+    "coverage:unit": "vitest run --dir test/unit --coverage --coverage.reportsDirectory=coverage/unit --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 --reporter=blob --outputFile=.vitest-reports/unit.json",
+    "coverage:integration": "vitest run --dir test/integration --coverage --coverage.reportsDirectory=coverage/integration --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 --reporter=blob --outputFile=.vitest-reports/integration.json",
+    "coverage:merge": "vitest run --mergeReports .vitest-reports --coverage --coverage.reportsDirectory=coverage/merged --coverage.thresholds.lines=60 --coverage.thresholds.functions=60 --coverage.thresholds.branches=60 --coverage.thresholds.statements=60",
     "coverage": "npm run coverage:clean && npm run coverage:unit && npm run coverage:integration && npm run coverage:merge"
   },
   "dependencies": {
