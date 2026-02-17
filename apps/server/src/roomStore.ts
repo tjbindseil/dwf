@@ -6,7 +6,7 @@ import type {
   RoomState,
   Stroke,
   StrokeStyle,
-  Tool
+  Tool,
 } from "@dwf/protocol";
 
 interface RoomInternals {
@@ -33,11 +33,11 @@ export class RoomStore {
           imageMeta: null,
           serverSeq: 0,
           strokes: [],
-          users: []
+          users: [],
         },
         appliedPoints: new Set(),
         undoStackByClient: new Map(),
-        redoStackByClient: new Map()
+        redoStackByClient: new Map(),
       };
       this.rooms.set(roomId, room);
     }
@@ -75,7 +75,9 @@ export class RoomStore {
 
     switch (msg.type) {
       case "stroke_start": {
-        const existing = room.state.strokes.find((s) => s.strokeId === msg.strokeId);
+        const existing = room.state.strokes.find(
+          (s) => s.strokeId === msg.strokeId,
+        );
         if (existing) {
           return null;
         }
@@ -87,7 +89,7 @@ export class RoomStore {
           style: msg.style,
           points: [msg.point],
           startedAt: msg.clientTs,
-          visible: true
+          visible: true,
         };
 
         room.state.strokes.push(stroke);
@@ -96,7 +98,9 @@ export class RoomStore {
         return this.bumpSeq(room.state, op);
       }
       case "stroke_point": {
-        const stroke = room.state.strokes.find((s) => s.strokeId === msg.strokeId);
+        const stroke = room.state.strokes.find(
+          (s) => s.strokeId === msg.strokeId,
+        );
         if (!stroke) {
           return null;
         }
@@ -108,16 +112,26 @@ export class RoomStore {
         room.appliedPoints.add(key);
 
         stroke.points.push(msg.point);
-        const op: RoomOp = { type: "stroke_point_added", strokeId: msg.strokeId, point: msg.point };
+        const op: RoomOp = {
+          type: "stroke_point_added",
+          strokeId: msg.strokeId,
+          point: msg.point,
+        };
         return this.bumpSeq(room.state, op);
       }
       case "stroke_end": {
-        const stroke = room.state.strokes.find((s) => s.strokeId === msg.strokeId);
+        const stroke = room.state.strokes.find(
+          (s) => s.strokeId === msg.strokeId,
+        );
         if (!stroke || stroke.endedAt) {
           return null;
         }
         stroke.endedAt = msg.clientTs;
-        const op: RoomOp = { type: "stroke_completed", strokeId: msg.strokeId, endedAt: msg.clientTs };
+        const op: RoomOp = {
+          type: "stroke_completed",
+          strokeId: msg.strokeId,
+          endedAt: msg.clientTs,
+        };
         return this.bumpSeq(room.state, op);
       }
       case "undo": {
@@ -135,7 +149,7 @@ export class RoomStore {
           type: "stroke_visibility",
           strokeId,
           visible: false,
-          byClientId: msg.clientId
+          byClientId: msg.clientId,
         };
         return this.bumpSeq(room.state, op);
       }
@@ -154,7 +168,7 @@ export class RoomStore {
           type: "stroke_visibility",
           strokeId,
           visible: true,
-          byClientId: msg.clientId
+          byClientId: msg.clientId,
         };
         return this.bumpSeq(room.state, op);
       }
@@ -172,7 +186,7 @@ export class RoomStore {
       state,
       appliedPoints: new Set(),
       undoStackByClient: new Map(),
-      redoStackByClient: new Map()
+      redoStackByClient: new Map(),
     });
 
     const room = this.rooms.get(state.roomId);
@@ -183,7 +197,9 @@ export class RoomStore {
     for (const stroke of state.strokes) {
       this.pushUndo(room, stroke.clientId, stroke.strokeId);
       for (const p of stroke.points) {
-        room.appliedPoints.add(`${stroke.strokeId}:${p.x}:${p.y}:${stroke.startedAt}`);
+        room.appliedPoints.add(
+          `${stroke.strokeId}:${p.x}:${p.y}:${stroke.startedAt}`,
+        );
       }
     }
   }
@@ -192,11 +208,15 @@ export class RoomStore {
     state.serverSeq += 1;
     return {
       serverSeq: state.serverSeq,
-      op
+      op,
     };
   }
 
-  private pushUndo(room: RoomInternals, clientId: string, strokeId: string): void {
+  private pushUndo(
+    room: RoomInternals,
+    clientId: string,
+    strokeId: string,
+  ): void {
     const stack = room.undoStackByClient.get(clientId) ?? [];
     stack.push(strokeId);
     room.undoStackByClient.set(clientId, stack);
@@ -208,7 +228,11 @@ export class RoomStore {
     return stack?.pop();
   }
 
-  private pushRedo(room: RoomInternals, clientId: string, strokeId: string): void {
+  private pushRedo(
+    room: RoomInternals,
+    clientId: string,
+    strokeId: string,
+  ): void {
     const stack = room.redoStackByClient.get(clientId) ?? [];
     stack.push(strokeId);
     room.redoStackByClient.set(clientId, stack);
@@ -227,7 +251,7 @@ export function createStrokeStart(
   point: Point,
   tool: Tool,
   style: StrokeStyle,
-  clientTs: number
+  clientTs: number,
 ): ClientToServerMessage {
   return {
     type: "stroke_start",
@@ -237,6 +261,6 @@ export function createStrokeStart(
     point,
     tool,
     style,
-    clientTs
+    clientTs,
   };
 }

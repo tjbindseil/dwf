@@ -10,6 +10,11 @@
     "build": "npm run build -w @dwf/protocol && npm run build -w @dwf/server && npm run build -w @dwf/web",
     "dev": "npm run dev -ws --if-present",
     "test": "npm run test -ws --if-present",
-    "lint": "npm run lint -ws --if-present"
+    "lint": "npm run lint -ws --if-present",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,cjs,mjs,json,md,css,html,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,cjs,mjs,json,md,css,html,yml,yaml}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
   }
 }

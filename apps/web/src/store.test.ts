@@ -11,7 +11,7 @@ describe("strokesForRender", () => {
         style: { color: "#000", size: 4 },
         points: [],
         startedAt: 1,
-        visible: true
+        visible: true,
       },
       {
         strokeId: "b",
@@ -20,7 +20,7 @@ describe("strokesForRender", () => {
         style: { color: "#000", size: 4 },
         points: [{ x: 1, y: 2 }],
         startedAt: 1,
-        visible: false
+        visible: false,
       },
       {
         strokeId: "c",
@@ -29,8 +29,8 @@ describe("strokesForRender", () => {
         style: { color: "#000", size: 4 },
         points: [{ x: 5, y: 8 }],
         startedAt: 1,
-        visible: true
-      }
+        visible: true,
+      },
     ]);
 
     expect(output).toHaveLength(1);

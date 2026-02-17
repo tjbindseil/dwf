@@ -9,7 +9,11 @@ import fastifyStatic from "@fastify/static";
 import { imageSize } from "image-size";
 import { nanoid } from "nanoid";
 import { WebSocket, WebSocketServer } from "ws";
-import type { ClientToServerMessage, CreateRoomResponse, ServerToClientMessage } from "@dwf/protocol";
+import type {
+  ClientToServerMessage,
+  CreateRoomResponse,
+  ServerToClientMessage,
+} from "@dwf/protocol";
 import { loadRoomState, saveRoomState } from "./persistence.js";
 import { imagesDir } from "./paths.js";
 import { RoomStore } from "./roomStore.js";
@@ -18,13 +22,16 @@ export async function buildServer() {
   const app = Fastify({ logger: true });
   const store = new RoomStore();
   const roomClients = new Map<string, Set<import("ws").WebSocket>>();
-  const clientRoom = new Map<import("ws").WebSocket, { roomId: string; clientId: string }>();
+  const clientRoom = new Map<
+    import("ws").WebSocket,
+    { roomId: string; clientId: string }
+  >();
 
   await app.register(cors, { origin: true });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } });
   await app.register(fastifyStatic, {
     root: imagesDir,
-    prefix: "/images/"
+    prefix: "/images/",
   });
 
   app.get("/health", async () => ({ ok: true }));
@@ -37,61 +44,72 @@ export async function buildServer() {
     return reply.send({ roomId, joinUrl: `/room/${roomId}` });
   });
 
-  app.post<{ Params: { roomId: string } }>("/rooms/:roomId/image", async (req, reply) => {
-    const { roomId } = req.params;
-    store.getOrCreateRoom(roomId);
+  app.post<{ Params: { roomId: string } }>(
+    "/rooms/:roomId/image",
+    async (req, reply) => {
+      const { roomId } = req.params;
+      store.getOrCreateRoom(roomId);
 
-    const part = await req.file();
-    if (!part) {
-      return reply.code(400).send({ error: "No file provided" });
-    }
+      const part = await req.file();
+      if (!part) {
+        return reply.code(400).send({ error: "No file provided" });
+      }
 
-    if (!["image/png", "image/jpeg", "image/webp"].includes(part.mimetype)) {
-      return reply.code(400).send({ error: "Only PNG, JPEG, and WEBP are allowed" });
-    }
+      if (!["image/png", "image/jpeg", "image/webp"].includes(part.mimetype)) {
+        return reply
+          .code(400)
+          .send({ error: "Only PNG, JPEG, and WEBP are allowed" });
+      }
 
-    await mkdir(imagesDir, { recursive: true });
+      await mkdir(imagesDir, { recursive: true });
 
-    const fileName = `${roomId}-${Date.now()}-${part.filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-    const filePath = path.join(imagesDir, fileName);
-    await pipeline(part.file, createWriteStream(filePath));
+      const fileName = `${roomId}-${Date.now()}-${part.filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const filePath = path.join(imagesDir, fileName);
+      await pipeline(part.file, createWriteStream(filePath));
 
-    const dimensions = imageSize(filePath);
-    if (!dimensions.width || !dimensions.height) {
-      return reply.code(400).send({ error: "Could not read image dimensions" });
-    }
+      const dimensions = imageSize(filePath);
+      if (!dimensions.width || !dimensions.height) {
+        return reply
+          .code(400)
+          .send({ error: "Could not read image dimensions" });
+      }
 
-    if (dimensions.width > 4096 || dimensions.height > 4096) {
-      return reply.code(400).send({ error: "Image max dimension is 4096px" });
-    }
+      if (dimensions.width > 4096 || dimensions.height > 4096) {
+        return reply.code(400).send({ error: "Image max dimension is 4096px" });
+      }
 
-    store.setImage(roomId, {
-      fileName: part.filename,
-      mimeType: part.mimetype,
-      width: dimensions.width,
-      height: dimensions.height,
-      path: `/images/${fileName}`
-    });
+      store.setImage(roomId, {
+        fileName: part.filename,
+        mimeType: part.mimetype,
+        width: dimensions.width,
+        height: dimensions.height,
+        path: `/images/${fileName}`,
+      });
 
-    const roomState = store.getRoomState(roomId);
-    if (roomState) {
-      await saveRoomState(roomState);
-    }
+      const roomState = store.getRoomState(roomId);
+      if (roomState) {
+        await saveRoomState(roomState);
+      }
 
-    return reply.send({ ok: true });
-  });
+      return reply.send({ ok: true });
+    },
+  );
 
-  app.get<{ Params: { roomId: string } }>("/rooms/:roomId/bootstrap", async (req, reply) => {
-    const { roomId } = req.params;
-    const roomState = store.getRoomState(roomId) ?? (await loadRoomState(roomId));
+  app.get<{ Params: { roomId: string } }>(
+    "/rooms/:roomId/bootstrap",
+    async (req, reply) => {
+      const { roomId } = req.params;
+      const roomState =
+        store.getRoomState(roomId) ?? (await loadRoomState(roomId));
 
-    if (!roomState) {
-      return reply.code(404).send({ error: "Room not found" });
-    }
+      if (!roomState) {
+        return reply.code(404).send({ error: "Room not found" });
+      }
 
-    store.hydrateRoom(roomState);
-    return reply.send({ roomState });
-  });
+      store.hydrateRoom(roomState);
+      return reply.send({ roomState });
+    },
+  );
 
   const server = app.server;
   const wss = new WebSocketServer({ noServer: true });
@@ -113,7 +131,8 @@ export async function buildServer() {
         const msg = JSON.parse(raw.toString()) as ClientToServerMessage;
 
         if (msg.type === "join_room") {
-          const roomState = store.getRoomState(msg.roomId) ?? (await loadRoomState(msg.roomId));
+          const roomState =
+            store.getRoomState(msg.roomId) ?? (await loadRoomState(msg.roomId));
           if (roomState) {
             store.hydrateRoom(roomState);
           }
@@ -125,10 +144,15 @@ export async function buildServer() {
           roomSet.add(ws);
           roomClients.set(msg.roomId, roomSet);
 
-          ws.send(JSON.stringify({ type: "joined", roomState: state } satisfies ServerToClientMessage));
+          ws.send(
+            JSON.stringify({
+              type: "joined",
+              roomState: state,
+            } satisfies ServerToClientMessage),
+          );
           broadcast(msg.roomId, {
             type: "presence",
-            users: state.users
+            users: state.users,
           });
 
           await saveRoomState(state);
@@ -148,15 +172,15 @@ export async function buildServer() {
         broadcast(msg.roomId, {
           type: "op_applied",
           serverSeq: applied.serverSeq,
-          op: applied.op
+          op: applied.op,
         });
       } catch {
         ws.send(
           JSON.stringify({
             type: "error",
             code: "BAD_MESSAGE",
-            message: "Invalid message payload"
-          } satisfies ServerToClientMessage)
+            message: "Invalid message payload",
+          } satisfies ServerToClientMessage),
         );
       }
     });

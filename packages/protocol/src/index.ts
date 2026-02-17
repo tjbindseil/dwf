@@ -105,7 +105,12 @@ export type RoomOp =
   | { type: "stroke_created"; stroke: Stroke }
   | { type: "stroke_point_added"; strokeId: string; point: Point }
   | { type: "stroke_completed"; strokeId: string; endedAt: number }
-  | { type: "stroke_visibility"; strokeId: string; visible: boolean; byClientId: string };
+  | {
+      type: "stroke_visibility";
+      strokeId: string;
+      visible: boolean;
+      byClientId: string;
+    };
 
 export interface CreateRoomResponse {
   roomId: string;

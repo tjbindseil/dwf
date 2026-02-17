@@ -5,7 +5,7 @@ import type {
   RoomOp,
   RoomState,
   ServerToClientMessage,
-  Stroke
+  Stroke,
 } from "@dwf/protocol";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
@@ -80,8 +80,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           type: "join_room",
           roomId,
           nickname,
-          clientId
-        } satisfies ClientToServerMessage)
+          clientId,
+        } satisfies ClientToServerMessage),
       );
     });
 
@@ -98,8 +98,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           return {
             roomState: {
               ...state.roomState,
-              users: message.users
-            }
+              users: message.users,
+            },
           };
         });
       }
@@ -131,7 +131,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     const response = await fetch(`${API_URL}/rooms/${roomId}/image`, {
       method: "POST",
-      body: formData
+      body: formData,
     });
 
     if (!response.ok) {
@@ -159,26 +159,35 @@ export const useAppStore = create<AppState>((set, get) => ({
         return state;
       }
 
-      const nextState = { ...state.roomState, strokes: [...state.roomState.strokes] };
+      const nextState = {
+        ...state.roomState,
+        strokes: [...state.roomState.strokes],
+      };
 
       switch (op.type) {
         case "stroke_created":
           nextState.strokes.push(op.stroke);
           break;
         case "stroke_point_added": {
-          const stroke = nextState.strokes.find((s) => s.strokeId === op.strokeId);
+          const stroke = nextState.strokes.find(
+            (s) => s.strokeId === op.strokeId,
+          );
           if (!stroke) break;
           stroke.points = [...stroke.points, op.point];
           break;
         }
         case "stroke_completed": {
-          const stroke = nextState.strokes.find((s) => s.strokeId === op.strokeId);
+          const stroke = nextState.strokes.find(
+            (s) => s.strokeId === op.strokeId,
+          );
           if (!stroke) break;
           stroke.endedAt = op.endedAt;
           break;
         }
         case "stroke_visibility": {
-          const stroke = nextState.strokes.find((s) => s.strokeId === op.strokeId);
+          const stroke = nextState.strokes.find(
+            (s) => s.strokeId === op.strokeId,
+          );
           if (!stroke) break;
           stroke.visible = op.visible;
           break;
@@ -188,7 +197,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       nextState.serverSeq = serverSeq;
       return { roomState: nextState };
     });
-  }
+  },
 }));
 
 export function strokesForRender(strokes: Stroke[]): Stroke[] {

@@ -44,7 +44,7 @@ export function App() {
     createRoom,
     joinRoom,
     send,
-    uploadImage
+    uploadImage,
   } = useAppStore();
   const [tool, setTool] = useState<Tool>("brush");
   const [color, setColor] = useState(COLORS[0]);
@@ -85,7 +85,7 @@ export function App() {
       tool,
       style: { color, size },
       point,
-      clientTs: Date.now()
+      clientTs: Date.now(),
     };
     send(msg);
   }
@@ -95,14 +95,16 @@ export function App() {
       return;
     }
 
-    setDraft((prev) => (prev ? { ...prev, points: [...prev.points, point] } : prev));
+    setDraft((prev) =>
+      prev ? { ...prev, points: [...prev.points, point] } : prev,
+    );
     send({
       type: "stroke_point",
       roomId: roomState.roomId,
       strokeId: draft.strokeId,
       clientId,
       point,
-      clientTs: Date.now()
+      clientTs: Date.now(),
     });
   }
 
@@ -116,7 +118,7 @@ export function App() {
       roomId: roomState.roomId,
       strokeId: draft.strokeId,
       clientId,
-      clientTs: Date.now()
+      clientTs: Date.now(),
     });
     setDraft(null);
   }
@@ -150,11 +152,19 @@ export function App() {
 
         <label>
           Nickname
-          <input value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="Your name" />
+          <input
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            placeholder="Your name"
+          />
         </label>
 
         <div className="row">
-          <input value={roomId} onChange={(e) => setRoomId(e.target.value)} placeholder="Room ID" />
+          <input
+            value={roomId}
+            onChange={(e) => setRoomId(e.target.value)}
+            placeholder="Room ID"
+          />
           <button onClick={() => void createRoom()}>Create</button>
         </div>
 
@@ -173,10 +183,16 @@ export function App() {
 
         <div className="toolbar">
           <div className="tool-row">
-            <button className={tool === "brush" ? "active" : ""} onClick={() => setTool("brush")}>
+            <button
+              className={tool === "brush" ? "active" : ""}
+              onClick={() => setTool("brush")}
+            >
               Brush
             </button>
-            <button className={tool === "eraser" ? "active" : ""} onClick={() => setTool("eraser")}>
+            <button
+              className={tool === "eraser" ? "active" : ""}
+              onClick={() => setTool("eraser")}
+            >
               Eraser
             </button>
           </div>
@@ -195,7 +211,13 @@ export function App() {
 
           <label>
             Size {size}
-            <input type="range" min={1} max={40} value={size} onChange={(e) => setSize(Number(e.target.value))} />
+            <input
+              type="range"
+              min={1}
+              max={40}
+              value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+            />
           </label>
 
           <div className="tool-row">
@@ -205,7 +227,7 @@ export function App() {
                 send({
                   type: "undo",
                   roomId: roomState.roomId,
-                  clientId
+                  clientId,
                 })
               }
             >
@@ -217,7 +239,7 @@ export function App() {
                 send({
                   type: "redo",
                   roomId: roomState.roomId,
-                  clientId
+                  clientId,
                 })
               }
             >
@@ -262,7 +284,9 @@ export function App() {
                 tension={0.2}
                 lineCap="round"
                 lineJoin="round"
-                globalCompositeOperation={stroke.tool === "eraser" ? "destination-out" : "source-over"}
+                globalCompositeOperation={
+                  stroke.tool === "eraser" ? "destination-out" : "source-over"
+                }
               />
             ))}
 
@@ -274,7 +298,9 @@ export function App() {
                 tension={0.2}
                 lineCap="round"
                 lineJoin="round"
-                globalCompositeOperation={draft.tool === "eraser" ? "destination-out" : "source-over"}
+                globalCompositeOperation={
+                  draft.tool === "eraser" ? "destination-out" : "source-over"
+                }
               />
             )}
           </Layer>
