@@ -252,6 +252,10 @@ export function App() {
 
         <p className="status">Connection: {connectionState}</p>
         <p className="status">Users: {roomState?.users.length ?? 0}</p>
+        <p className="status">
+          Usernames:{" "}
+          {roomState?.users.map((u) => u.nickname).join(", ") ?? "none"}
+        </p>
       </aside>
 
       <main className="canvas-wrap">
