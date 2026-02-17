@@ -3,7 +3,7 @@ import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import type { AddressInfo } from "node:net";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import WebSocket from "ws";
 import type {
   ClientToServerMessage,
@@ -12,6 +12,15 @@ import type {
 
 const tempDirs: string[] = [];
 const servers: Array<{ close: () => Promise<unknown> }> = [];
+const tinyPngBase64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO5fN6sAAAAASUVORK5CYII=";
+
+interface TestContext {
+  app: Awaited<ReturnType<typeof startServer>>;
+  roomId: string;
+}
+
+let ctx: TestContext;
 
 function buildMultipartPayload(file: {
   fieldName: string;
@@ -36,6 +45,62 @@ async function startServer() {
   const app = await mod.buildServer();
   servers.push(app);
   return app;
+}
+
+async function createRoom(app: Awaited<ReturnType<typeof startServer>>) {
+  const createRes = await app.inject({ method: "POST", url: "/rooms" });
+  expect(createRes.statusCode).toBe(200);
+  return createRes.json<{ roomId: string; joinUrl: string }>();
+}
+
+async function uploadTinyPng(
+  app: Awaited<ReturnType<typeof startServer>>,
+  roomId: string,
+) {
+  const validUpload = buildMultipartPayload({
+    fieldName: "file",
+    filename: "tiny.png",
+    contentType: "image/png",
+    body: Buffer.from(tinyPngBase64, "base64"),
+  });
+
+  return app.inject({
+    method: "POST",
+    url: `/rooms/${roomId}/image`,
+    headers: {
+      "content-type": `multipart/form-data; boundary=${validUpload.boundary}`,
+    },
+    payload: validUpload.payload,
+  });
+}
+
+async function connectWsClient(opts: {
+  app: Awaited<ReturnType<typeof startServer>>;
+  roomId: string;
+  clientId: string;
+  nickname: string;
+}) {
+  await opts.app.listen({ host: "127.0.0.1", port: 0 });
+  const address = opts.app.server.address() as AddressInfo;
+  const wsUrl = `ws://127.0.0.1:${address.port}/ws`;
+
+  const ws = new WebSocket(wsUrl);
+  await new Promise<void>((resolve, reject) => {
+    ws.once("open", () => resolve());
+    ws.once("error", reject);
+  });
+
+  ws.send(
+    JSON.stringify({
+      type: "join_room",
+      roomId: opts.roomId,
+      nickname: opts.nickname,
+      clientId: opts.clientId,
+    } satisfies ClientToServerMessage),
+  );
+
+  await waitForWsMessage(ws, (m) => m.type === "joined");
+  return ws;
 }
 
 function waitForWsMessage(
@@ -73,6 +138,16 @@ function canBindLocalhost(): Promise<boolean> {
   });
 }
 
+beforeEach(async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "dwf-int-"));
+  tempDirs.push(dir);
+  process.env.DWF_DATA_DIR = dir;
+
+  const app = await startServer();
+  const room = await createRoom(app);
+  ctx = { app, roomId: room.roomId };
+});
+
 afterEach(async () => {
   await Promise.all(servers.splice(0).map((app) => app.close()));
   await Promise.all(
@@ -84,41 +159,22 @@ afterEach(async () => {
 
 describe("server integration", () => {
   it("creates room and bootstraps state", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "dwf-int-"));
-    tempDirs.push(dir);
-    process.env.DWF_DATA_DIR = dir;
-
-    const app = await startServer();
-
-    const createRes = await app.inject({ method: "POST", url: "/rooms" });
-    expect(createRes.statusCode).toBe(200);
-    const created = createRes.json<{ roomId: string; joinUrl: string }>();
-    expect(created.roomId).toBeTruthy();
-    expect(created.joinUrl).toBe(`/room/${created.roomId}`);
-
-    const bootRes = await app.inject({
+    const bootRes = await ctx.app.inject({
       method: "GET",
-      url: `/rooms/${created.roomId}/bootstrap`,
+      url: `/rooms/${ctx.roomId}/bootstrap`,
     });
     expect(bootRes.statusCode).toBe(200);
+
     const boot = bootRes.json<{
       roomState: { roomId: string; serverSeq: number; strokes: unknown[] };
     }>();
-    expect(boot.roomState.roomId).toBe(created.roomId);
+
+    expect(boot.roomState.roomId).toBe(ctx.roomId);
     expect(boot.roomState.serverSeq).toBe(0);
     expect(boot.roomState.strokes).toHaveLength(0);
   });
 
   it("validates image upload and stores metadata", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "dwf-int-"));
-    tempDirs.push(dir);
-    process.env.DWF_DATA_DIR = dir;
-
-    const app = await startServer();
-
-    const createRes = await app.inject({ method: "POST", url: "/rooms" });
-    const created = createRes.json<{ roomId: string }>();
-
     const invalidUpload = buildMultipartPayload({
       fieldName: "file",
       filename: "note.txt",
@@ -126,9 +182,9 @@ describe("server integration", () => {
       body: Buffer.from("hello", "utf8"),
     });
 
-    const invalidRes = await app.inject({
+    const invalidRes = await ctx.app.inject({
       method: "POST",
-      url: `/rooms/${created.roomId}/image`,
+      url: `/rooms/${ctx.roomId}/image`,
       headers: {
         "content-type": `multipart/form-data; boundary=${invalidUpload.boundary}`,
       },
@@ -136,28 +192,12 @@ describe("server integration", () => {
     });
     expect(invalidRes.statusCode).toBe(400);
 
-    const pngBase64 =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO5fN6sAAAAASUVORK5CYII=";
-    const validUpload = buildMultipartPayload({
-      fieldName: "file",
-      filename: "tiny.png",
-      contentType: "image/png",
-      body: Buffer.from(pngBase64, "base64"),
-    });
-
-    const uploadRes = await app.inject({
-      method: "POST",
-      url: `/rooms/${created.roomId}/image`,
-      headers: {
-        "content-type": `multipart/form-data; boundary=${validUpload.boundary}`,
-      },
-      payload: validUpload.payload,
-    });
+    const uploadRes = await uploadTinyPng(ctx.app, ctx.roomId);
     expect(uploadRes.statusCode).toBe(200);
 
-    const bootRes = await app.inject({
+    const bootRes = await ctx.app.inject({
       method: "GET",
-      url: `/rooms/${created.roomId}/bootstrap`,
+      url: `/rooms/${ctx.roomId}/bootstrap`,
     });
     const boot = bootRes.json<{
       roomState: {
@@ -183,41 +223,17 @@ describe("server integration", () => {
       return;
     }
 
-    const dir = await mkdtemp(path.join(os.tmpdir(), "dwf-int-"));
-    tempDirs.push(dir);
-    process.env.DWF_DATA_DIR = dir;
-
-    const app = await startServer();
-
-    const createRes = await app.inject({ method: "POST", url: "/rooms" });
-    const created = createRes.json<{ roomId: string }>();
-
-    await app.listen({ host: "127.0.0.1", port: 0 });
-    const address = app.server.address() as AddressInfo;
-    const wsUrl = `ws://127.0.0.1:${address.port}/ws`;
-
-    const ws = new WebSocket(wsUrl);
-    await new Promise<void>((resolve, reject) => {
-      ws.once("open", () => resolve());
-      ws.once("error", reject);
+    const ws = await connectWsClient({
+      app: ctx.app,
+      roomId: ctx.roomId,
+      clientId: "c1",
+      nickname: "alice",
     });
 
     ws.send(
       JSON.stringify({
-        type: "join_room",
-        roomId: created.roomId,
-        nickname: "alice",
-        clientId: "c1",
-      } satisfies ClientToServerMessage),
-    );
-
-    const joined = await waitForWsMessage(ws, (m) => m.type === "joined");
-    expect(joined.type).toBe("joined");
-
-    ws.send(
-      JSON.stringify({
         type: "stroke_start",
-        roomId: created.roomId,
+        roomId: ctx.roomId,
         strokeId: "s1",
         clientId: "c1",
         tool: "brush",
@@ -236,7 +252,7 @@ describe("server integration", () => {
     ws.send(
       JSON.stringify({
         type: "stroke_end",
-        roomId: created.roomId,
+        roomId: ctx.roomId,
         strokeId: "s1",
         clientId: "c1",
         clientTs: Date.now(),
@@ -254,42 +270,19 @@ describe("server integration", () => {
   });
 
   it("persists room metadata across server restart", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "dwf-int-"));
-    tempDirs.push(dir);
-    process.env.DWF_DATA_DIR = dir;
-
-    const first = await startServer();
-    const createRes = await first.inject({ method: "POST", url: "/rooms" });
-    const created = createRes.json<{ roomId: string }>();
-
-    const pngBase64 =
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO5fN6sAAAAASUVORK5CYII=";
-    const validUpload = buildMultipartPayload({
-      fieldName: "file",
-      filename: "tiny.png",
-      contentType: "image/png",
-      body: Buffer.from(pngBase64, "base64"),
-    });
-
-    const uploadRes = await first.inject({
-      method: "POST",
-      url: `/rooms/${created.roomId}/image`,
-      headers: {
-        "content-type": `multipart/form-data; boundary=${validUpload.boundary}`,
-      },
-      payload: validUpload.payload,
-    });
+    const uploadRes = await uploadTinyPng(ctx.app, ctx.roomId);
     expect(uploadRes.statusCode).toBe(200);
 
-    await first.close();
+    await ctx.app.close();
     servers.pop();
 
     const second = await startServer();
     const bootRes = await second.inject({
       method: "GET",
-      url: `/rooms/${created.roomId}/bootstrap`,
+      url: `/rooms/${ctx.roomId}/bootstrap`,
     });
     expect(bootRes.statusCode).toBe(200);
+
     const boot = bootRes.json<{
       roomState: {
         imageMeta: null | { fileName: string; width: number; height: number };
