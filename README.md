@@ -17,6 +17,7 @@ Realtime collaborative photo drawing app.
 4. Open `http://localhost:5173`
 
 Default API URL is `http://localhost:3001`. Override with `VITE_API_URL`.
+Server data directory defaults to `<repo>/data`. Override with `DWF_DATA_DIR`.
 
 ## API
 - `POST /rooms`

@@ -11,6 +11,7 @@ import { nanoid } from "nanoid";
 import { WebSocket, WebSocketServer } from "ws";
 import type { ClientToServerMessage, CreateRoomResponse, ServerToClientMessage } from "@dwf/protocol";
 import { loadRoomState, saveRoomState } from "./persistence.js";
+import { imagesDir } from "./paths.js";
 import { RoomStore } from "./roomStore.js";
 
 export async function buildServer() {
@@ -22,7 +23,7 @@ export async function buildServer() {
   await app.register(cors, { origin: true });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } });
   await app.register(fastifyStatic, {
-    root: path.resolve(process.cwd(), "data/images"),
+    root: imagesDir,
     prefix: "/images/"
   });
 
@@ -49,7 +50,6 @@ export async function buildServer() {
       return reply.code(400).send({ error: "Only PNG, JPEG, and WEBP are allowed" });
     }
 
-    const imagesDir = path.resolve(process.cwd(), "data/images");
     await mkdir(imagesDir, { recursive: true });
 
     const fileName = `${roomId}-${Date.now()}-${part.filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
