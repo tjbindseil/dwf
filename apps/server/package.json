@@ -8,7 +8,9 @@
     "build": "tsc -b tsconfig.json",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "test": "tsx --test test/**/*.test.ts"
+    "test": "vitest run",
+    "test:unit": "vitest run --dir test/unit",
+    "test:integration": "vitest run --dir test/integration"
   },
   "dependencies": {
     "@dwf/protocol": "0.1.0",
@@ -24,6 +26,7 @@
     "@types/node": "^22.13.4",
     "@types/ws": "^8.5.14",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^3.2.4"
   }
 }

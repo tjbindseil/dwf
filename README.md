@@ -30,6 +30,9 @@ Server data directory defaults to `<repo>/data`. Override with `DWF_DATA_DIR`.
 
 ## Tests
 
+- Unit tests (all workspaces): `npm run test:unit`
+- Integration tests (all workspaces): `npm run test:integration`
+- Full local gate: `npm run test:all`
 - Server: `npm run test -w @dwf/server`
 - Web: `npm run test -w @dwf/web`
 

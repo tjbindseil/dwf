@@ -24,6 +24,7 @@ export async function buildServer() {
   const roomClients = new Map<string, Set<WebSocket>>();
   const clientRoom = new Map<WebSocket, { roomId: string; clientId: string }>();
 
+  await mkdir(imagesDir, { recursive: true });
   await app.register(cors, { origin: true });
   await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } });
   await app.register(fastifyStatic, {

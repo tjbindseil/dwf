@@ -8,9 +8,12 @@
   ],
   "scripts": {
     "build": "npm run build -w @dwf/protocol && npm run build -w @dwf/server && npm run build -w @dwf/web",
-    "dev": "npm run dev -ws --if-present",
-    "test": "npm run test -ws --if-present",
-    "lint": "npm run lint -ws --if-present",
+    "dev": "npm run dev --workspaces --if-present",
+    "test": "npm run test:all",
+    "test:unit": "npm run test:unit --workspaces --if-present",
+    "test:integration": "npm run test:integration --workspaces --if-present",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "lint": "npm run lint --workspaces --if-present",
     "format": "prettier . --write",
     "format:check": "prettier . --check"
   },
